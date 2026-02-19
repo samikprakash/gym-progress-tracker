@@ -9,12 +9,12 @@ import {
   YAxis,
 } from 'recharts'
 
+import type { DailyLog } from '@/lib/types'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { formatDayName, parseDateKey } from '@/lib/date-utils'
-import type { DailyLog } from '@/lib/types'
 
 type ProgressChartsProps = {
-  logs: DailyLog[]
+  logs: Array<DailyLog>
 }
 
 export function ProgressCharts({ logs }: ProgressChartsProps) {
@@ -44,66 +44,100 @@ export function ProgressCharts({ logs }: ProgressChartsProps) {
   const hasStepsData = chartData.some((point) => point.steps !== null)
 
   return (
-    <section className="grid gap-3 lg:grid-cols-2">
-      <Card>
-        <CardHeader>
-          <CardTitle>Weight Trend (kg)</CardTitle>
-        </CardHeader>
-        <CardContent className="h-72">
-          {!mounted || !hasWeightData ? (
-            <p className="text-sm text-muted-foreground">
-              Add weight logs to see your trend.
-            </p>
-          ) : (
-            <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={chartData} margin={{ top: 8, right: 8, left: 0, bottom: 0 }}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="dateLabel" minTickGap={24} />
-                <YAxis domain={['dataMin - 2', 'dataMax + 2']} />
-                <Tooltip />
-                <Line
-                  type="monotone"
-                  dataKey="weight"
-                  stroke="#0f766e"
-                  strokeWidth={2}
-                  dot={false}
-                  connectNulls
-                />
-              </LineChart>
-            </ResponsiveContainer>
-          )}
-        </CardContent>
-      </Card>
+    <section className="space-y-3">
+      <div className="px-1">
+        <h2 className="text-2xl font-semibold tracking-tight text-zinc-100">Progress Trends</h2>
+      </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Steps Trend</CardTitle>
-        </CardHeader>
-        <CardContent className="h-72">
-          {!mounted || !hasStepsData ? (
-            <p className="text-sm text-muted-foreground">
-              Add step logs to see your trend.
-            </p>
-          ) : (
-            <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={chartData} margin={{ top: 8, right: 8, left: 0, bottom: 0 }}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="dateLabel" minTickGap={24} />
-                <YAxis />
-                <Tooltip />
-                <Line
-                  type="monotone"
-                  dataKey="steps"
-                  stroke="#2563eb"
-                  strokeWidth={2}
-                  dot={false}
-                  connectNulls
-                />
-              </LineChart>
-            </ResponsiveContainer>
-          )}
-        </CardContent>
-      </Card>
+      <div className="grid gap-3 lg:grid-cols-2">
+        <Card className="motion-surface rounded-2xl border-white/12 bg-white/[0.03] py-4 text-zinc-100">
+          <CardHeader>
+            <CardTitle className="text-lg">Weight Trend (kg)</CardTitle>
+          </CardHeader>
+          <CardContent className="h-72">
+            {!mounted || !hasWeightData ? (
+              <p className="text-sm text-zinc-400">Add weight logs to see your trend.</p>
+            ) : (
+              <ResponsiveContainer width="100%" height="100%">
+                <LineChart data={chartData} margin={{ top: 8, right: 8, left: 0, bottom: 0 }}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.1)" />
+                  <XAxis
+                    dataKey="dateLabel"
+                    minTickGap={24}
+                    stroke="#71717a"
+                    tick={{ fill: '#a1a1aa', fontSize: 12 }}
+                  />
+                  <YAxis
+                    domain={['dataMin - 2', 'dataMax + 2']}
+                    stroke="#71717a"
+                    tick={{ fill: '#a1a1aa', fontSize: 12 }}
+                  />
+                  <Tooltip
+                    contentStyle={{
+                      borderRadius: '14px',
+                      border: '1px solid rgba(255,255,255,0.14)',
+                      background: 'rgba(9,9,11,0.96)',
+                      color: '#fafafa',
+                    }}
+                    labelStyle={{ color: '#d4d4d8' }}
+                  />
+                  <Line
+                    type="monotone"
+                    dataKey="weight"
+                    stroke="#f5f5f5"
+                    strokeWidth={2.5}
+                    dot={false}
+                    activeDot={{ r: 4, fill: '#0a0a0a', stroke: '#f5f5f5', strokeWidth: 2 }}
+                    connectNulls
+                  />
+                </LineChart>
+              </ResponsiveContainer>
+            )}
+          </CardContent>
+        </Card>
+
+        <Card className="motion-surface rounded-2xl border-white/12 bg-white/[0.03] py-4 text-zinc-100">
+          <CardHeader>
+            <CardTitle className="text-lg">Steps Trend</CardTitle>
+          </CardHeader>
+          <CardContent className="h-72">
+            {!mounted || !hasStepsData ? (
+              <p className="text-sm text-zinc-400">Add step logs to see your trend.</p>
+            ) : (
+              <ResponsiveContainer width="100%" height="100%">
+                <LineChart data={chartData} margin={{ top: 8, right: 8, left: 0, bottom: 0 }}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.1)" />
+                  <XAxis
+                    dataKey="dateLabel"
+                    minTickGap={24}
+                    stroke="#71717a"
+                    tick={{ fill: '#a1a1aa', fontSize: 12 }}
+                  />
+                  <YAxis stroke="#71717a" tick={{ fill: '#a1a1aa', fontSize: 12 }} />
+                  <Tooltip
+                    contentStyle={{
+                      borderRadius: '14px',
+                      border: '1px solid rgba(255,255,255,0.14)',
+                      background: 'rgba(9,9,11,0.96)',
+                      color: '#fafafa',
+                    }}
+                    labelStyle={{ color: '#d4d4d8' }}
+                  />
+                  <Line
+                    type="monotone"
+                    dataKey="steps"
+                    stroke="#d4d4d8"
+                    strokeWidth={2.5}
+                    dot={false}
+                    activeDot={{ r: 4, fill: '#0a0a0a', stroke: '#d4d4d8', strokeWidth: 2 }}
+                    connectNulls
+                  />
+                </LineChart>
+              </ResponsiveContainer>
+            )}
+          </CardContent>
+        </Card>
+      </div>
     </section>
   )
 }

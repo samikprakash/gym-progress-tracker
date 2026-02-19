@@ -1,8 +1,9 @@
-import { CheckCircle2 } from 'lucide-react'
+import { CheckCircle2, Dumbbell, Flame } from 'lucide-react'
 
 import type { TodayPlan } from '@/lib/types'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { cn } from '@/lib/utils'
 
 type TodayPlanProps = {
   plan: TodayPlan | undefined
@@ -34,19 +35,36 @@ export function TodayPlanSection({
 }: TodayPlanProps) {
   return (
     <section>
-      <Card>
-        <CardHeader>
-          <CardTitle>Today's Plan</CardTitle>
-          <p className="text-sm text-muted-foreground">
-            Auto-assigned based on today and loaded instantly.
-          </p>
+      <Card className="motion-surface rounded-3xl border-white/15 bg-white/[0.03] py-5 text-zinc-100 shadow-[0_22px_50px_rgba(0,0,0,0.28)] sm:py-6">
+        <CardHeader className="border-b border-white/10 pb-4">
+          <div className="flex flex-wrap items-start justify-between gap-4">
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-[0.2em] text-zinc-500">
+                Your Plan
+              </p>
+              <CardTitle className="mt-2 text-2xl font-semibold tracking-tight">
+                Execution Focus
+              </CardTitle>
+              <p className="mt-1 text-sm text-zinc-400">
+                Auto-assigned based on today and ready for quick logging.
+              </p>
+            </div>
+            <span className="rounded-full border border-white/20 bg-white/10 px-3 py-1 text-xs font-semibold uppercase tracking-[0.15em] text-zinc-200">
+              Ready
+            </span>
+          </div>
         </CardHeader>
 
-        <CardContent className="grid gap-3 md:grid-cols-2">
-          <Card className="border">
-            <CardHeader>
-              <CardTitle className="text-base">Workout</CardTitle>
-              <p className="text-sm text-muted-foreground">
+        <CardContent className="grid gap-4 pt-4 md:grid-cols-2">
+          <Card className="motion-surface rounded-2xl border-white/12 bg-black/35 py-4 text-zinc-100">
+            <CardHeader className="pb-2">
+              <CardTitle className="inline-flex items-center gap-2 text-lg">
+                <span className="inline-flex size-8 items-center justify-center rounded-full border border-white/20 bg-white/10">
+                  <Dumbbell className="size-4" />
+                </span>
+                Workout
+              </CardTitle>
+              <p className="text-sm text-zinc-400">
                 {isLoading
                   ? 'Loading workout...'
                   : plan?.workout?.title ?? 'No workout assigned'}
@@ -59,25 +77,33 @@ export function TodayPlanSection({
                     const setsAndReps = formatSetsAndReps(exercise)
 
                     return (
-                      <li key={`${exercise.name}-${exercise.sets ?? ''}-${exercise.reps ?? ''}`}>
-                        <p className="font-medium">{exercise.name}</p>
+                      <li
+                        key={`${exercise.name}-${exercise.sets ?? ''}-${exercise.reps ?? ''}`}
+                        className="motion-surface rounded-xl border border-white/12 bg-white/[0.02] px-3 py-2 hover:border-white/30"
+                      >
+                        <p className="font-medium text-zinc-100">{exercise.name}</p>
                         {setsAndReps ? (
-                          <p className="text-xs text-muted-foreground">{setsAndReps}</p>
+                          <p className="text-xs text-zinc-400">{setsAndReps}</p>
                         ) : null}
                       </li>
                     )
                   })}
                 </ul>
               ) : (
-                <p className="text-sm text-muted-foreground">Rest / recovery day.</p>
+                <p className="text-sm text-zinc-400">Rest / recovery day.</p>
               )}
 
               {plan?.workout && plan.workout.exercises.length > 0 ? (
                 <Button
                   type="button"
-                  variant={isWorkoutCompleted ? 'secondary' : 'default'}
                   onClick={onMarkWorkoutDone}
                   disabled={!isWriteEnabled || isWorkoutCompleted || isMarkingWorkout}
+                  className={cn(
+                    'h-11 w-full rounded-2xl font-semibold',
+                    isWorkoutCompleted
+                      ? 'bg-emerald-500/20 text-emerald-200 hover:bg-emerald-500/25'
+                      : 'bg-zinc-100 text-zinc-950 hover:bg-zinc-200',
+                  )}
                 >
                   <CheckCircle2 className="size-4" />
                   {!isWriteEnabled
@@ -92,29 +118,40 @@ export function TodayPlanSection({
             </CardContent>
           </Card>
 
-          <Card className="border">
-            <CardHeader>
-              <CardTitle className="text-base">Diet</CardTitle>
+          <Card className="motion-surface rounded-2xl border-white/12 bg-black/35 py-4 text-zinc-100">
+            <CardHeader className="pb-2">
+              <CardTitle className="inline-flex items-center gap-2 text-lg">
+                <span className="inline-flex size-8 items-center justify-center rounded-full border border-white/20 bg-white/10">
+                  <Flame className="size-4" />
+                </span>
+                Nutrition
+              </CardTitle>
               {plan?.diet ? (
-                <p className="text-sm text-muted-foreground">
+                <p className="text-sm text-zinc-400">
                   Calories: {plan.diet.targetCalories} · Protein: {plan.diet.targetProtein}
                 </p>
               ) : (
-                <p className="text-sm text-muted-foreground">
+                <p className="text-sm text-zinc-400">
                   {isLoading ? 'Loading diet...' : 'No diet assigned'}
                 </p>
               )}
             </CardHeader>
-            <CardContent>
+            <CardContent className="space-y-3">
               {plan?.diet ? (
                 <ul className="space-y-2 text-sm">
                   {plan.diet.meals.map((meal) => (
-                    <li key={meal.name}>
-                      <p className="font-medium">{meal.name}</p>
-                      <p className="text-xs text-muted-foreground">{meal.description}</p>
-                      <p className="text-xs text-muted-foreground">
-                        Protein: {meal.protein} · Calories: {meal.calories}
-                      </p>
+                    <li
+                      key={meal.name}
+                      className="motion-surface rounded-xl border border-white/12 bg-white/[0.02] px-3 py-2 hover:border-white/30"
+                    >
+                      <div className="flex flex-wrap items-center justify-between gap-2">
+                        <p className="font-medium text-zinc-100">{meal.name}</p>
+                        <span className="rounded-full border border-white/20 px-2 py-0.5 text-[11px] uppercase tracking-[0.12em] text-zinc-300">
+                          {meal.calories}
+                        </span>
+                      </div>
+                      <p className="mt-1 text-xs text-zinc-400">{meal.description}</p>
+                      <p className="mt-1 text-xs text-zinc-400">Protein: {meal.protein}</p>
                     </li>
                   ))}
                 </ul>

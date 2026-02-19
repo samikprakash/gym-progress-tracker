@@ -19,40 +19,42 @@ export function WeekNavigation({
   onNextWeek,
 }: WeekNavigationProps) {
   return (
-    <div className="sticky top-0 z-10 rounded-xl border bg-card/95 p-3 shadow-sm backdrop-blur md:static md:rounded-none md:border-0 md:bg-transparent md:p-0 md:shadow-none md:backdrop-blur-none">
-      <div className="mb-2 text-center md:hidden">
-        <p className="text-xs font-medium uppercase tracking-[0.16em] text-muted-foreground">
-          Active Week
-        </p>
-        <h2 className="text-base font-semibold">{formatWeekRange(weekStart, weekEnd)}</h2>
-      </div>
+    <div className="motion-surface rounded-3xl border border-white/15 bg-white/[0.03] p-4 shadow-[0_22px_50px_rgba(0,0,0,0.28)] sm:p-5">
+      <p className="text-center text-xs font-semibold uppercase tracking-[0.18em] text-zinc-500">
+        Weekly Consistency
+      </p>
 
-      <div className="flex items-center justify-between gap-2 md:justify-end">
-        <p className="hidden text-sm font-medium text-muted-foreground md:block md:mr-auto">
-          {formatWeekRange(weekStart, weekEnd)}
-        </p>
-
+      <div className="mt-3 flex items-center gap-3">
         <Button
           type="button"
           variant="outline"
-          size="sm"
+          size="icon"
+          className="size-10 rounded-full border-white/20 bg-white/5 text-zinc-100 hover:border-white/35 hover:bg-white/15"
           onClick={onPreviousWeek}
           aria-label="Go to previous week"
         >
-          <ChevronLeft className="size-4" />
-          <span className="hidden sm:inline">Previous</span>
+          <ChevronLeft className="size-5" />
         </Button>
+
+        <div className="motion-surface flex-1 rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-center">
+          <p className="text-xs font-medium uppercase tracking-[0.18em] text-zinc-500">
+            Active Week
+          </p>
+          <h2 className="mt-1 text-base font-semibold text-zinc-100 sm:text-lg">
+            {formatWeekRange(weekStart, weekEnd)}
+          </h2>
+        </div>
 
         <Button
           type="button"
           variant="outline"
-          size="sm"
+          size="icon"
+          className="size-10 rounded-full border-white/20 bg-white/5 text-zinc-100 hover:border-white/35 hover:bg-white/15"
           onClick={onNextWeek}
           disabled={!canGoNext}
           aria-label="Go to next week"
         >
-          <span className="hidden sm:inline">Next</span>
-          <ChevronRight className="size-4" />
+          <ChevronRight className="size-5" />
         </Button>
       </div>
     </div>

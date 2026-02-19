@@ -40,7 +40,7 @@ function RootDocument({ children }: { children: React.ReactNode }) {
       <head>
         <HeadContent />
       </head>
-      <body className="min-h-screen bg-gradient-to-b from-background to-muted/30">
+      <body className="min-h-screen bg-background text-foreground">
         {children}
         <TanStackDevtools
           config={{

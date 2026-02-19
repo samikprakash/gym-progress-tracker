@@ -167,10 +167,10 @@ export function DailyCheckIn({
   const isInputDisabled = isSaving || isSubmitting || !isWriteEnabled
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Daily Check-In</CardTitle>
-        <p className="text-sm text-muted-foreground">
+    <Card className="motion-surface rounded-3xl border-white/15 bg-white/[0.03] py-5 text-zinc-100 shadow-[0_22px_50px_rgba(0,0,0,0.28)] sm:py-6">
+      <CardHeader className="border-b border-white/10 pb-4">
+        <CardTitle className="text-2xl font-semibold tracking-tight">Daily Check-In</CardTitle>
+        <p className="text-sm text-zinc-400">
           {format(selectedDay, 'EEEE, MMM d')}
           {isToday(selectedDay) ? ' (Today)' : ''}
           {' '}
@@ -178,7 +178,7 @@ export function DailyCheckIn({
         </p>
       </CardHeader>
 
-      <CardContent className="space-y-4">
+      <CardContent className="space-y-4 pt-4">
         <div className="-mx-1 flex gap-2 overflow-x-auto px-1 pb-1">
           {getWeekDays(weekStart).map((day) => {
             const dateKey = toDateKey(day)
@@ -193,13 +193,15 @@ export function DailyCheckIn({
                 type="button"
                 onClick={() => onSelectDate(dateKey)}
                 className={cn(
-                  'flex min-w-16 flex-col items-center rounded-lg border px-3 py-2 text-xs font-medium transition-colors',
-                  isSelected && 'border-primary bg-primary text-primary-foreground',
+                  'motion-press flex min-w-16 flex-col items-center rounded-2xl border px-3 py-2 text-xs font-medium transition-colors',
+                  isSelected &&
+                    'border-zinc-200 bg-zinc-100 text-zinc-900 shadow-[0_8px_24px_rgba(255,255,255,0.12)]',
                   !isSelected && isWorkoutDone &&
-                    'border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-900 dark:bg-emerald-950/30 dark:text-emerald-300',
+                    'border-emerald-400/60 bg-emerald-500/15 text-emerald-200',
                   !isSelected && !isWorkoutDone && isMissed &&
-                    'border-rose-200 bg-rose-50 text-rose-700 dark:border-rose-900 dark:bg-rose-950/30 dark:text-rose-300',
-                  !isSelected && !isWorkoutDone && !isMissed && 'bg-background text-foreground',
+                    'border-rose-400/60 bg-rose-500/15 text-rose-200',
+                  !isSelected && !isWorkoutDone && !isMissed &&
+                    'border-white/12 bg-white/[0.02] text-zinc-300 hover:border-white/35',
                 )}
               >
                 <span>{format(day, 'EEE')}</span>
@@ -212,7 +214,10 @@ export function DailyCheckIn({
         <form className="space-y-3" onSubmit={(event) => event.preventDefault()}>
           <div className="grid grid-cols-2 gap-2">
             <div className="space-y-1">
-              <label htmlFor="weight" className="text-xs font-medium text-muted-foreground">
+              <label
+                htmlFor="weight"
+                className="text-xs font-semibold uppercase tracking-[0.14em] text-zinc-500"
+              >
                 Weight (kg)
               </label>
               <Input
@@ -221,12 +226,18 @@ export function DailyCheckIn({
                 inputMode="decimal"
                 placeholder="kg"
                 disabled={isInputDisabled}
-                className={cn(errors.weight && 'border-destructive')}
+                className={cn(
+                  'h-11 rounded-xl border-white/15 bg-white/[0.03] px-3 text-zinc-100 placeholder:text-zinc-500 focus-visible:border-white/40 focus-visible:ring-white/20',
+                  errors.weight && 'border-destructive',
+                )}
               />
             </div>
 
             <div className="space-y-1">
-              <label htmlFor="steps" className="text-xs font-medium text-muted-foreground">
+              <label
+                htmlFor="steps"
+                className="text-xs font-semibold uppercase tracking-[0.14em] text-zinc-500"
+              >
                 Steps
               </label>
               <Input
@@ -235,12 +246,18 @@ export function DailyCheckIn({
                 inputMode="numeric"
                 placeholder="steps"
                 disabled={isInputDisabled}
-                className={cn(errors.steps && 'border-destructive')}
+                className={cn(
+                  'h-11 rounded-xl border-white/15 bg-white/[0.03] px-3 text-zinc-100 placeholder:text-zinc-500 focus-visible:border-white/40 focus-visible:ring-white/20',
+                  errors.steps && 'border-destructive',
+                )}
               />
             </div>
 
             <div className="space-y-1">
-              <label htmlFor="calories" className="text-xs font-medium text-muted-foreground">
+              <label
+                htmlFor="calories"
+                className="text-xs font-semibold uppercase tracking-[0.14em] text-zinc-500"
+              >
                 Calories
               </label>
               <Input
@@ -249,12 +266,18 @@ export function DailyCheckIn({
                 inputMode="numeric"
                 placeholder="kcal"
                 disabled={isInputDisabled}
-                className={cn(errors.calories && 'border-destructive')}
+                className={cn(
+                  'h-11 rounded-xl border-white/15 bg-white/[0.03] px-3 text-zinc-100 placeholder:text-zinc-500 focus-visible:border-white/40 focus-visible:ring-white/20',
+                  errors.calories && 'border-destructive',
+                )}
               />
             </div>
 
             <div className="space-y-1">
-              <label htmlFor="protein" className="text-xs font-medium text-muted-foreground">
+              <label
+                htmlFor="protein"
+                className="text-xs font-semibold uppercase tracking-[0.14em] text-zinc-500"
+              >
                 Protein
               </label>
               <Input
@@ -263,7 +286,10 @@ export function DailyCheckIn({
                 inputMode="numeric"
                 placeholder="g"
                 disabled={isInputDisabled}
-                className={cn(errors.protein && 'border-destructive')}
+                className={cn(
+                  'h-11 rounded-xl border-white/15 bg-white/[0.03] px-3 text-zinc-100 placeholder:text-zinc-500 focus-visible:border-white/40 focus-visible:ring-white/20',
+                  errors.protein && 'border-destructive',
+                )}
               />
             </div>
           </div>
@@ -271,14 +297,14 @@ export function DailyCheckIn({
           <label
             htmlFor="workoutCompleted"
             className={cn(
-              'flex items-center justify-between rounded-lg border px-3 py-2 transition-colors',
+              'motion-surface flex items-center justify-between rounded-2xl border px-3 py-3 transition-colors',
               isWriteEnabled ? 'cursor-pointer' : 'cursor-not-allowed opacity-80',
               workoutCompleted
-                ? 'border-emerald-300 bg-emerald-50 text-emerald-700 dark:border-emerald-900 dark:bg-emerald-950/30 dark:text-emerald-300'
-                : 'border-border bg-background',
+                ? 'border-emerald-400/60 bg-emerald-500/15 text-emerald-200'
+                : 'border-white/12 bg-white/[0.02]',
             )}
           >
-            <span className="text-sm font-medium">Workout completed</span>
+            <span className="text-sm font-medium text-zinc-100">Workout completed</span>
             <input
               id="workoutCompleted"
               type="checkbox"
@@ -290,7 +316,10 @@ export function DailyCheckIn({
           </label>
 
           <div className="space-y-1">
-            <label htmlFor="notes" className="text-xs font-medium text-muted-foreground">
+            <label
+              htmlFor="notes"
+              className="text-xs font-semibold uppercase tracking-[0.14em] text-zinc-500"
+            >
               Notes
             </label>
             <Textarea
@@ -298,13 +327,16 @@ export function DailyCheckIn({
               {...register('notes')}
               placeholder="How did training feel today?"
               disabled={isInputDisabled}
-              className={cn('min-h-20 resize-y', errors.notes && 'border-destructive')}
+              className={cn(
+                'min-h-20 resize-y rounded-2xl border-white/15 bg-white/[0.03] px-3 py-2 text-zinc-100 placeholder:text-zinc-500 focus-visible:border-white/40 focus-visible:ring-white/20',
+                errors.notes && 'border-destructive',
+              )}
             />
           </div>
         </form>
 
         <div className="space-y-1">
-          <p className="text-xs text-muted-foreground">
+          <p className="text-xs text-zinc-400">
             {!isWriteEnabled
               ? 'Read-only mode. Enter write credentials to save changes.'
               : isSaving || isSubmitting
