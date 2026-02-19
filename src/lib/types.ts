@@ -1,5 +1,6 @@
 export type DailyLog = {
   id: number
+  userId: number | null
   date: string
   weight: number | null
   calories: number | null
@@ -46,4 +47,11 @@ export type TodayPlan = {
     targetCalories: string
     targetProtein: string
   } | null
+}
+
+export type AuthStatus = {
+  isAuthenticated: boolean
+  username: string | null
+  canWrite: boolean
+  canSignup: boolean
 }

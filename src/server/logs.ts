@@ -8,11 +8,15 @@ import {
   dailyLogPayloadSchema,
   weekRangeInputSchema,
 } from '@/lib/validation/daily-log'
+import { requireAuthenticatedUserForCurrentRequest } from '@/server/auth-core'
+import { writeAccessMiddleware } from '@/server/security'
 
 const saveLog = async ({
+  userId,
   date,
   data,
 }: {
+  userId: number
   date: string
   data: ReturnType<typeof dailyLogPayloadSchema.parse>
 }) => {
@@ -21,6 +25,7 @@ const saveLog = async ({
   await db
     .insert(dailyLogs)
     .values({
+      userId,
       date,
       weight: data.weight,
       calories: data.calories,
@@ -31,7 +36,7 @@ const saveLog = async ({
       updatedAt: now,
     })
     .onConflictDoUpdate({
-      target: dailyLogs.date,
+      target: [dailyLogs.userId, dailyLogs.date],
       set: {
         weight: data.weight,
         calories: data.calories,
@@ -43,13 +48,14 @@ const saveLog = async ({
       },
     })
 
-  const [saved] = await db
+  const savedRows = await db
     .select()
     .from(dailyLogs)
-    .where(eq(dailyLogs.date, date))
+    .where(and(eq(dailyLogs.userId, userId), eq(dailyLogs.date, date)))
     .limit(1)
+  const saved = savedRows.at(0) ?? null
 
-  if (!saved) {
+  if (saved === null) {
     throw new Error('Unable to read saved log entry')
   }
 
@@ -57,10 +63,14 @@ const saveLog = async ({
 }
 
 export const createOrUpdateLog = createServerFn({ method: 'POST' })
+  .middleware([writeAccessMiddleware])
   .inputValidator((input: unknown) => createOrUpdateLogInputSchema.parse(input))
   .handler(async ({ data }) => {
     try {
+      const sessionUser = await requireAuthenticatedUserForCurrentRequest()
+
       return await saveLog({
+        userId: sessionUser.id,
         date: data.date,
         data: dailyLogPayloadSchema.parse(data.data),
       })
@@ -74,11 +84,14 @@ export const getLogsByWeek = createServerFn({ method: 'GET' })
   .inputValidator((input: unknown) => weekRangeInputSchema.parse(input))
   .handler(async ({ data }) => {
     try {
+      const sessionUser = await requireAuthenticatedUserForCurrentRequest()
+
       return await db
         .select()
         .from(dailyLogs)
         .where(
           and(
+            eq(dailyLogs.userId, sessionUser.id),
             gte(dailyLogs.date, data.startDate),
             lte(dailyLogs.date, data.endDate),
           ),
@@ -92,7 +105,13 @@ export const getLogsByWeek = createServerFn({ method: 'GET' })
 
 export const getAllLogs = createServerFn({ method: 'GET' }).handler(async () => {
   try {
-    return await db.select().from(dailyLogs).orderBy(asc(dailyLogs.date))
+    const sessionUser = await requireAuthenticatedUserForCurrentRequest()
+
+    return await db
+      .select()
+      .from(dailyLogs)
+      .where(eq(dailyLogs.userId, sessionUser.id))
+      .orderBy(asc(dailyLogs.date))
   } catch (error) {
     console.error('getAllLogs failed:', error)
     throw new Error('Failed to fetch logs')

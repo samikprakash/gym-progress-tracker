@@ -13,6 +13,7 @@ import {
 } from '@/lib/db/schema'
 
 type SeedResult = {
+  userId: number
   todayDate: string
   workoutPlanId: number
   dietPlanId: number
@@ -22,20 +23,26 @@ const nowIsoString = () => new Date().toISOString()
 
 const getTodayDate = () => format(new Date(), 'yyyy-MM-dd')
 
-const getExistingDefaultPlanState = async (): Promise<SeedResult | null> => {
+const getExistingDefaultPlanState = async ({
+  userId,
+}: {
+  userId: number
+}): Promise<SeedResult | null> => {
   const todayDate = getTodayDate()
 
-  const [workoutPlan] = await db
+  const workoutPlanRows = await db
     .select({ id: workoutPlans.id })
     .from(workoutPlans)
     .where(eq(workoutPlans.name, DEFAULT_WORKOUT_PLAN.name))
     .limit(1)
+  const workoutPlan = workoutPlanRows.at(0) ?? null
 
-  const [dietPlan] = await db
+  const dietPlanRows = await db
     .select({ id: dietPlans.id })
     .from(dietPlans)
     .where(eq(dietPlans.name, DEFAULT_DIET_PLAN.name))
     .limit(1)
+  const dietPlan = dietPlanRows.at(0) ?? null
 
   if (!workoutPlan || !dietPlan) {
     return null
@@ -58,14 +65,15 @@ const getExistingDefaultPlanState = async (): Promise<SeedResult | null> => {
     return null
   }
 
-  const [todayLog] = await db
+  const todayLogRows = await db
     .select({
       workoutPlanId: dailyLogs.workoutPlanId,
       dietPlanId: dailyLogs.dietPlanId,
     })
     .from(dailyLogs)
-    .where(eq(dailyLogs.date, todayDate))
+    .where(and(eq(dailyLogs.userId, userId), eq(dailyLogs.date, todayDate)))
     .limit(1)
+  const todayLog = todayLogRows.at(0) ?? null
 
   if (
     !todayLog ||
@@ -76,6 +84,7 @@ const getExistingDefaultPlanState = async (): Promise<SeedResult | null> => {
   }
 
   return {
+    userId,
     todayDate,
     workoutPlanId: workoutPlan.id,
     dietPlanId: dietPlan.id,
@@ -98,11 +107,12 @@ const ensureWorkoutPlan = async () => {
       },
     })
 
-  const [plan] = await db
+  const planRows = await db
     .select({ id: workoutPlans.id })
     .from(workoutPlans)
     .where(eq(workoutPlans.name, DEFAULT_WORKOUT_PLAN.name))
     .limit(1)
+  const plan = planRows.at(0) ?? null
 
   if (!plan) {
     throw new Error('Unable to create workout plan')
@@ -125,7 +135,7 @@ const ensureWorkoutPlan = async () => {
         },
       })
 
-    const [storedDay] = await db
+    const storedDayRows = await db
       .select({ id: workoutDays.id })
       .from(workoutDays)
       .where(
@@ -135,6 +145,7 @@ const ensureWorkoutPlan = async () => {
         ),
       )
       .limit(1)
+    const storedDay = storedDayRows.at(0) ?? null
 
     if (!storedDay) {
       throw new Error(`Unable to create workout day ${day.title}`)
@@ -197,11 +208,12 @@ const ensureDietPlan = async () => {
       },
     })
 
-  const [plan] = await db
+  const planRows = await db
     .select({ id: dietPlans.id })
     .from(dietPlans)
     .where(eq(dietPlans.name, DEFAULT_DIET_PLAN.name))
     .limit(1)
+  const plan = planRows.at(0) ?? null
 
   if (!plan) {
     throw new Error('Unable to create diet plan')
@@ -244,12 +256,16 @@ const ensureDietPlan = async () => {
 }
 
 export const seedDefaultPlansForToday = async ({
+  userId,
   force = false,
 }: {
+  userId: number
   force?: boolean
-} = {}): Promise<SeedResult> => {
+}): Promise<SeedResult> => {
   if (!force) {
-    const existingState = await getExistingDefaultPlanState()
+    const existingState = await getExistingDefaultPlanState({
+      userId,
+    })
     if (existingState) {
       return existingState
     }
@@ -264,13 +280,14 @@ export const seedDefaultPlansForToday = async ({
   await db
     .insert(dailyLogs)
     .values({
+      userId,
       date: todayDate,
       workoutPlanId,
       dietPlanId,
       updatedAt,
     })
     .onConflictDoUpdate({
-      target: dailyLogs.date,
+      target: [dailyLogs.userId, dailyLogs.date],
       set: {
         workoutPlanId,
         dietPlanId,
@@ -279,6 +296,7 @@ export const seedDefaultPlansForToday = async ({
     })
 
   return {
+    userId,
     todayDate,
     workoutPlanId,
     dietPlanId,

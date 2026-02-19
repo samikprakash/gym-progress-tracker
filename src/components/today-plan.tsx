@@ -1,14 +1,15 @@
 import { CheckCircle2 } from 'lucide-react'
 
+import type { TodayPlan } from '@/lib/types'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import type { TodayPlan } from '@/lib/types'
 
 type TodayPlanProps = {
   plan: TodayPlan | undefined
   isLoading: boolean
   isWorkoutCompleted: boolean
   isMarkingWorkout: boolean
+  isWriteEnabled: boolean
   onMarkWorkoutDone: () => void
 }
 
@@ -28,6 +29,7 @@ export function TodayPlanSection({
   isLoading,
   isWorkoutCompleted,
   isMarkingWorkout,
+  isWriteEnabled,
   onMarkWorkoutDone,
 }: TodayPlanProps) {
   return (
@@ -75,10 +77,12 @@ export function TodayPlanSection({
                   type="button"
                   variant={isWorkoutCompleted ? 'secondary' : 'default'}
                   onClick={onMarkWorkoutDone}
-                  disabled={isWorkoutCompleted || isMarkingWorkout}
+                  disabled={!isWriteEnabled || isWorkoutCompleted || isMarkingWorkout}
                 >
                   <CheckCircle2 className="size-4" />
-                  {isWorkoutCompleted
+                  {!isWriteEnabled
+                    ? 'Write Access Required'
+                    : isWorkoutCompleted
                     ? 'Workout Completed'
                     : isMarkingWorkout
                       ? 'Updating...'

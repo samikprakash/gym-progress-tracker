@@ -4,6 +4,8 @@ import { useForm, useWatch } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 
+import type { DailyLog } from '@/lib/types'
+import type { DailyLogPayload } from '@/lib/validation/daily-log'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
@@ -14,8 +16,6 @@ import {
   toDateKey,
 } from '@/lib/date-utils'
 import { cn } from '@/lib/utils'
-import type { DailyLog } from '@/lib/types'
-import type { DailyLogPayload } from '@/lib/validation/daily-log'
 
 const numericTextField = ({
   label,
@@ -63,6 +63,7 @@ type DailyCheckInProps = {
   selectedDate: string
   logs: Array<DailyLog>
   isSaving: boolean
+  isWriteEnabled: boolean
   onSelectDate: (dateKey: string) => void
   onAutoSave: (input: SaveDailyLogInput) => Promise<void>
 }
@@ -100,6 +101,7 @@ export function DailyCheckIn({
   selectedDate,
   logs,
   isSaving,
+  isWriteEnabled,
   onSelectDate,
   onAutoSave,
 }: DailyCheckInProps) {
@@ -159,7 +161,10 @@ export function DailyCheckIn({
     return () => window.clearTimeout(timeoutId)
   }, [watchedValues, isDirty, isValid, handleSubmit, onSubmit])
 
-  const firstError = Object.values(errors).find((error) => error?.message)?.message
+  const firstError = Object.values(errors).find((error) => Boolean(error.message))
+  const firstErrorMessage =
+    firstError && typeof firstError.message === 'string' ? firstError.message : null
+  const isInputDisabled = isSaving || isSubmitting || !isWriteEnabled
 
   return (
     <Card>
@@ -215,7 +220,7 @@ export function DailyCheckIn({
                 {...register('weight')}
                 inputMode="decimal"
                 placeholder="kg"
-                disabled={isSaving || isSubmitting}
+                disabled={isInputDisabled}
                 className={cn(errors.weight && 'border-destructive')}
               />
             </div>
@@ -229,7 +234,7 @@ export function DailyCheckIn({
                 {...register('steps')}
                 inputMode="numeric"
                 placeholder="steps"
-                disabled={isSaving || isSubmitting}
+                disabled={isInputDisabled}
                 className={cn(errors.steps && 'border-destructive')}
               />
             </div>
@@ -243,7 +248,7 @@ export function DailyCheckIn({
                 {...register('calories')}
                 inputMode="numeric"
                 placeholder="kcal"
-                disabled={isSaving || isSubmitting}
+                disabled={isInputDisabled}
                 className={cn(errors.calories && 'border-destructive')}
               />
             </div>
@@ -257,7 +262,7 @@ export function DailyCheckIn({
                 {...register('protein')}
                 inputMode="numeric"
                 placeholder="g"
-                disabled={isSaving || isSubmitting}
+                disabled={isInputDisabled}
                 className={cn(errors.protein && 'border-destructive')}
               />
             </div>
@@ -266,7 +271,8 @@ export function DailyCheckIn({
           <label
             htmlFor="workoutCompleted"
             className={cn(
-              'flex cursor-pointer items-center justify-between rounded-lg border px-3 py-2 transition-colors',
+              'flex items-center justify-between rounded-lg border px-3 py-2 transition-colors',
+              isWriteEnabled ? 'cursor-pointer' : 'cursor-not-allowed opacity-80',
               workoutCompleted
                 ? 'border-emerald-300 bg-emerald-50 text-emerald-700 dark:border-emerald-900 dark:bg-emerald-950/30 dark:text-emerald-300'
                 : 'border-border bg-background',
@@ -277,7 +283,7 @@ export function DailyCheckIn({
               id="workoutCompleted"
               type="checkbox"
               {...register('workoutCompleted')}
-              disabled={isSaving || isSubmitting}
+              disabled={isInputDisabled}
               className="size-4 accent-emerald-600"
               aria-label={`Workout completed for ${format(selectedDay, 'PPP')}`}
             />
@@ -291,7 +297,7 @@ export function DailyCheckIn({
               id="notes"
               {...register('notes')}
               placeholder="How did training feel today?"
-              disabled={isSaving || isSubmitting}
+              disabled={isInputDisabled}
               className={cn('min-h-20 resize-y', errors.notes && 'border-destructive')}
             />
           </div>
@@ -299,15 +305,17 @@ export function DailyCheckIn({
 
         <div className="space-y-1">
           <p className="text-xs text-muted-foreground">
-            {isSaving || isSubmitting
+            {!isWriteEnabled
+              ? 'Read-only mode. Enter write credentials to save changes.'
+              : isSaving || isSubmitting
               ? 'Saving changes...'
               : isDirty
                 ? 'Changes pending...'
                 : 'All changes saved.'}
           </p>
 
-          {typeof firstError === 'string' ? (
-            <p className="text-xs text-destructive">{firstError}</p>
+          {typeof firstErrorMessage === 'string' ? (
+            <p className="text-xs text-destructive">{firstErrorMessage}</p>
           ) : null}
         </div>
       </CardContent>

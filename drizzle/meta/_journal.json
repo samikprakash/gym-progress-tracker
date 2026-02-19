@@ -15,6 +15,20 @@
       "when": 1771506159317,
       "tag": "0001_polite_shard",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "6",
+      "when": 1771508810314,
+      "tag": "0002_silly_vulture",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "6",
+      "when": 1771509887112,
+      "tag": "0003_closed_marvel_boy",
+      "breakpoints": true
     }
   ]
 }

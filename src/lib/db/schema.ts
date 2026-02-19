@@ -105,22 +105,70 @@ export const dietMeals = sqliteTable(
   }),
 )
 
-export const dailyLogs = sqliteTable('daily_logs', {
-  id: integer('id').primaryKey({ autoIncrement: true }),
-  date: text('date').notNull().unique(),
-  weight: real('weight'),
-  calories: integer('calories'),
-  protein: integer('protein'),
-  steps: integer('steps'),
-  workoutCompleted: integer('workout_completed', { mode: 'boolean' })
-    .notNull()
-    .default(false),
-  notes: text('notes'),
-  workoutPlanId: integer('workout_plan_id').references(() => workoutPlans.id),
-  dietPlanId: integer('diet_plan_id').references(() => dietPlans.id),
-  createdAt: text('created_at').notNull().default(sql`CURRENT_TIMESTAMP`),
-  updatedAt: text('updated_at').notNull().default(sql`CURRENT_TIMESTAMP`),
-})
+export const authUsers = sqliteTable(
+  'auth_users',
+  {
+    id: integer('id').primaryKey({ autoIncrement: true }),
+    username: text('username').notNull(),
+    passwordHash: text('password_hash').notNull(),
+    passwordSalt: text('password_salt').notNull(),
+    createdAt: text('created_at').notNull().default(sql`CURRENT_TIMESTAMP`),
+    updatedAt: text('updated_at').notNull().default(sql`CURRENT_TIMESTAMP`),
+  },
+  (table) => ({
+    usernameUnique: uniqueIndex('auth_users_username_unique').on(table.username),
+  }),
+)
+
+export const authSessions = sqliteTable(
+  'auth_sessions',
+  {
+    id: integer('id').primaryKey({ autoIncrement: true }),
+    userId: integer('user_id')
+      .notNull()
+      .references(() => authUsers.id, { onDelete: 'cascade' }),
+    tokenHash: text('token_hash').notNull(),
+    expiresAt: text('expires_at').notNull(),
+    createdAt: text('created_at').notNull().default(sql`CURRENT_TIMESTAMP`),
+    updatedAt: text('updated_at').notNull().default(sql`CURRENT_TIMESTAMP`),
+  },
+  (table) => ({
+    tokenHashUnique: uniqueIndex('auth_sessions_token_hash_unique').on(
+      table.tokenHash,
+    ),
+    userIdx: index('auth_sessions_user_idx').on(table.userId),
+    expiresAtIdx: index('auth_sessions_expires_at_idx').on(table.expiresAt),
+  }),
+)
+
+export const dailyLogs = sqliteTable(
+  'daily_logs',
+  {
+    id: integer('id').primaryKey({ autoIncrement: true }),
+    userId: integer('user_id').references(() => authUsers.id, { onDelete: 'cascade' }),
+    date: text('date').notNull(),
+    weight: real('weight'),
+    calories: integer('calories'),
+    protein: integer('protein'),
+    steps: integer('steps'),
+    workoutCompleted: integer('workout_completed', { mode: 'boolean' })
+      .notNull()
+      .default(false),
+    notes: text('notes'),
+    workoutPlanId: integer('workout_plan_id').references(() => workoutPlans.id),
+    dietPlanId: integer('diet_plan_id').references(() => dietPlans.id),
+    createdAt: text('created_at').notNull().default(sql`CURRENT_TIMESTAMP`),
+    updatedAt: text('updated_at').notNull().default(sql`CURRENT_TIMESTAMP`),
+  },
+  (table) => ({
+    userDateUnique: uniqueIndex('daily_logs_user_date_unique').on(
+      table.userId,
+      table.date,
+    ),
+    userIdx: index('daily_logs_user_idx').on(table.userId),
+    dateIdx: index('daily_logs_date_idx').on(table.date),
+  }),
+)
 
 export type DailyLogRecord = typeof dailyLogs.$inferSelect
 export type NewDailyLogRecord = typeof dailyLogs.$inferInsert

@@ -6,7 +6,9 @@ Production-style fitness tracking web app built with TanStack Start, TanStack Qu
 
 - Mobile-first daily check-in flow with week day picker (Monday-Sunday)
 - Automatic save on change for weight, calories, protein, steps, workout status, and notes
-- Auto-seeded "Today's Plan" section (workout + diet) with no manual setup
+- "Today's Plan" section (workout + diet) loaded from stored plan data
+- Authenticated read/write workflow with per-user data isolation
+- Basic `/auth` login/signup page
 - Weekly summary metrics:
   - start/end weight
   - average calories/protein/steps
@@ -34,26 +36,36 @@ Production-style fitness tracking web app built with TanStack Start, TanStack Qu
 npm install
 ```
 
-2. Generate migrations (already included, optional unless schema changes)
+2. Optional: configure write rate limits
+
+```bash
+cp .env.example .env
+```
+
+Optional auth setting in `.env`:
+
+- `AUTH_ALLOW_SIGNUP=false` to disable new account registration.
+
+3. Generate migrations (already included, optional unless schema changes)
 
 ```bash
 npm run db:generate
 ```
 
-3. Run migrations
+4. Run migrations
 
 ```bash
 mkdir -p data
 npm run db:migrate
 ```
 
-4. Seed example data
+5. Seed example data
 
 ```bash
 npm run db:seed
 ```
 
-5. Start the app
+6. Start the app
 
 ```bash
 npm run dev
@@ -66,6 +78,16 @@ The app runs at [http://localhost:3000](http://localhost:3000).
 ```bash
 npm run build
 ```
+
+## Security Notes
+
+- This repository is safe to open source as long as you do not commit your `.env` file.
+- User passwords are never committed and are stored server-side as salted scrypt hashes.
+- All log/plan reads and writes require authentication.
+- Each user can only access and mutate their own `daily_logs` data.
+- `AUTH_ALLOW_SIGNUP=false` can disable future user registration.
+- Write endpoints also use simple in-memory IP rate limiting (`WRITE_RATE_LIMIT_MAX_REQUESTS` / `WRITE_RATE_LIMIT_WINDOW_MS`).
+- Use HTTPS in production so authentication traffic and cookies are encrypted in transit.
 
 ## Database
 

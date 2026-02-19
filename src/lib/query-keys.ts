@@ -4,4 +4,5 @@ export const logsQueryKeys = {
     [...logsQueryKeys.all, 'week', startDate, endDate] as const,
   allLogs: () => [...logsQueryKeys.all, 'all'] as const,
   todayPlan: () => [...logsQueryKeys.all, 'today-plan'] as const,
+  authStatus: () => [...logsQueryKeys.all, 'auth-status'] as const,
 }

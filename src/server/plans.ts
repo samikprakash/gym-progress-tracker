@@ -1,36 +1,52 @@
-import { getISODay } from 'date-fns'
+import { format, getISODay } from 'date-fns'
 import { and, asc, eq } from 'drizzle-orm'
 import { createServerFn } from '@tanstack/react-start'
 
 import { db } from '@/lib/db'
+import { DEFAULT_DIET_PLAN, DEFAULT_WORKOUT_PLAN } from '@/lib/default-plan'
 import {
   dailyLogs,
   dietMeals,
   dietPlans,
   workoutDays,
   workoutExercises,
+  workoutPlans,
 } from '@/lib/db/schema'
 import { seedDefaultPlansForToday } from '@/server/plan-seed'
+import { requireAuthenticatedUserForCurrentRequest } from '@/server/auth-core'
+import { writeAccessMiddleware } from '@/server/security'
 
 export const getTodayPlan = createServerFn({ method: 'GET' }).handler(async () => {
   try {
-    const { todayDate } = await seedDefaultPlansForToday()
+    const sessionUser = await requireAuthenticatedUserForCurrentRequest()
+    const todayDate = format(new Date(), 'yyyy-MM-dd')
     const dayOfWeek = getISODay(new Date())
 
-    const [todayLog] = await db
+    const todayLogRows = await db
       .select({
         workoutPlanId: dailyLogs.workoutPlanId,
         dietPlanId: dailyLogs.dietPlanId,
       })
       .from(dailyLogs)
-      .where(eq(dailyLogs.date, todayDate))
+      .where(
+        and(eq(dailyLogs.userId, sessionUser.id), eq(dailyLogs.date, todayDate)),
+      )
       .limit(1)
+    const todayLog = todayLogRows.at(0) ?? null
 
-    if (!todayLog) {
-      return {
-        workout: null,
-        diet: null,
-      }
+    let workoutPlanId: number | null =
+      todayLog && todayLog.workoutPlanId !== null ? todayLog.workoutPlanId : null
+
+    if (workoutPlanId === null) {
+      const defaultWorkoutPlanRows = await db
+        .select({
+          id: workoutPlans.id,
+        })
+        .from(workoutPlans)
+        .where(eq(workoutPlans.name, DEFAULT_WORKOUT_PLAN.name))
+        .limit(1)
+      const defaultWorkoutPlan = defaultWorkoutPlanRows.at(0) ?? null
+      workoutPlanId = defaultWorkoutPlan ? defaultWorkoutPlan.id : null
     }
 
     let workout: {
@@ -42,8 +58,8 @@ export const getTodayPlan = createServerFn({ method: 'GET' }).handler(async () =
       }>
     } | null = null
 
-    if (todayLog.workoutPlanId !== null) {
-      const [todayWorkoutDay] = await db
+    if (workoutPlanId !== null) {
+      const todayWorkoutDayRows = await db
         .select({
           id: workoutDays.id,
           title: workoutDays.title,
@@ -51,13 +67,14 @@ export const getTodayPlan = createServerFn({ method: 'GET' }).handler(async () =
         .from(workoutDays)
         .where(
           and(
-            eq(workoutDays.workoutPlanId, todayLog.workoutPlanId),
+            eq(workoutDays.workoutPlanId, workoutPlanId),
             eq(workoutDays.dayOfWeek, dayOfWeek),
           ),
         )
         .limit(1)
+      const todayWorkoutDay = todayWorkoutDayRows.at(0) ?? null
 
-      if (todayWorkoutDay) {
+      if (todayWorkoutDay !== null) {
         const exercises = await db
           .select({
             name: workoutExercises.name,
@@ -75,6 +92,21 @@ export const getTodayPlan = createServerFn({ method: 'GET' }).handler(async () =
       }
     }
 
+    let dietPlanId: number | null =
+      todayLog && todayLog.dietPlanId !== null ? todayLog.dietPlanId : null
+
+    if (dietPlanId === null) {
+      const defaultDietPlanRows = await db
+        .select({
+          id: dietPlans.id,
+        })
+        .from(dietPlans)
+        .where(eq(dietPlans.name, DEFAULT_DIET_PLAN.name))
+        .limit(1)
+      const defaultDietPlan = defaultDietPlanRows.at(0) ?? null
+      dietPlanId = defaultDietPlan ? defaultDietPlan.id : null
+    }
+
     let diet: {
       meals: Array<{
         name: string
@@ -86,18 +118,19 @@ export const getTodayPlan = createServerFn({ method: 'GET' }).handler(async () =
       targetProtein: string
     } | null = null
 
-    if (todayLog.dietPlanId !== null) {
-      const [todayDietPlan] = await db
+    if (dietPlanId !== null) {
+      const todayDietPlanRows = await db
         .select({
           id: dietPlans.id,
           targetCalories: dietPlans.targetCalories,
           targetProtein: dietPlans.targetProtein,
         })
         .from(dietPlans)
-        .where(eq(dietPlans.id, todayLog.dietPlanId))
+        .where(eq(dietPlans.id, dietPlanId))
         .limit(1)
+      const todayDietPlan = todayDietPlanRows.at(0) ?? null
 
-      if (todayDietPlan) {
+      if (todayDietPlan !== null) {
         const meals = await db
           .select({
             name: dietMeals.name,
@@ -127,10 +160,14 @@ export const getTodayPlan = createServerFn({ method: 'GET' }).handler(async () =
   }
 })
 
-export const markWorkoutDoneForToday = createServerFn({ method: 'POST' }).handler(
-  async () => {
+export const markWorkoutDoneForToday = createServerFn({ method: 'POST' })
+  .middleware([writeAccessMiddleware])
+  .handler(async () => {
     try {
-      const { todayDate } = await seedDefaultPlansForToday()
+      const sessionUser = await requireAuthenticatedUserForCurrentRequest()
+      const { todayDate } = await seedDefaultPlansForToday({
+        userId: sessionUser.id,
+      })
       const updatedAt = new Date().toISOString()
 
       await db
@@ -139,18 +176,22 @@ export const markWorkoutDoneForToday = createServerFn({ method: 'POST' }).handle
           workoutCompleted: true,
           updatedAt,
         })
-        .where(eq(dailyLogs.date, todayDate))
+        .where(
+          and(eq(dailyLogs.userId, sessionUser.id), eq(dailyLogs.date, todayDate)),
+        )
 
-      const [updatedLog] = await db
+      const updatedLogRows = await db
         .select()
         .from(dailyLogs)
-        .where(eq(dailyLogs.date, todayDate))
+        .where(
+          and(eq(dailyLogs.userId, sessionUser.id), eq(dailyLogs.date, todayDate)),
+        )
         .limit(1)
+      const updatedLog = updatedLogRows.at(0) ?? null
 
-      return updatedLog ?? null
+      return updatedLog
     } catch (error) {
       console.error('markWorkoutDoneForToday failed:', error)
       throw new Error('Failed to mark workout as done')
     }
-  },
-)
+  })
