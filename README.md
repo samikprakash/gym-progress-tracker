@@ -6,6 +6,7 @@ Production-style fitness tracking web app built with TanStack Start, TanStack Qu
 
 - Mobile-first daily check-in flow with week day picker (Monday-Sunday)
 - Automatic save on change for weight, calories, protein, steps, workout status, and notes
+- Auto-seeded "Today's Plan" section (workout + diet) with no manual setup
 - Weekly summary metrics:
   - start/end weight
   - average calories/protein/steps
@@ -71,16 +72,15 @@ npm run build
 - SQLite file: `data/gym-tracker.db` (or `DATABASE_URL` if set)
 - Drizzle config: `drizzle.config.ts`
 - Schema: `src/lib/db/schema.ts`
-- Server functions: `src/server/logs.ts`
+- Server functions: `src/server/logs.ts`, `src/server/plans.ts`
 
 ## Example Seed Data
 
-The seed script inserts 42 days of realistic sample data:
+The seed script inserts and assigns:
 
-- gradual weight trend
-- varying calories/protein/steps
-- alternating workout days
-- occasional notes
+- Workout plan: `Fat Loss PPL + Conditioning`
+- Diet plan: `2000 Cal High Protein`
+- Today's `daily_logs` entry with `workoutPlanId` + `dietPlanId`
 
 Run with:
 

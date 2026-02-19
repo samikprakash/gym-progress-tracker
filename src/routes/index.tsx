@@ -6,6 +6,7 @@ import { addWeeks } from 'date-fns'
 import { DailyCheckIn } from '@/components/daily-check-in'
 import { DarkModeToggle } from '@/components/dark-mode-toggle'
 import { ProgressCharts } from '@/components/progress-charts'
+import { TodayPlanSection } from '@/components/today-plan'
 import { Badge } from '@/components/ui/badge'
 import { WeeklySummaryCards } from '@/components/weekly-summary'
 import { WeekNavigation } from '@/components/week-navigation'
@@ -22,9 +23,10 @@ import {
   toDateKey,
 } from '@/lib/date-utils'
 import { logsQueryKeys } from '@/lib/query-keys'
-import type { DailyLog } from '@/lib/types'
+import type { DailyLog, TodayPlan } from '@/lib/types'
 import type { DailyLogPayload } from '@/lib/validation/daily-log'
 import { createOrUpdateLog, getAllLogs, getLogsByWeek } from '@/server/logs'
+import { getTodayPlan, markWorkoutDoneForToday } from '@/server/plans'
 
 export const Route = createFileRoute('/')({
   component: Home,
@@ -74,6 +76,11 @@ function Home() {
     queryFn: async () => (await getAllLogs()) as DailyLog[],
   })
 
+  const todayPlanQuery = useQuery({
+    queryKey: logsQueryKeys.todayPlan(),
+    queryFn: async () => (await getTodayPlan()) as TodayPlan,
+  })
+
   const saveLogMutation = useMutation({
     mutationFn: async ({ date, data }: SaveDailyLogInput) => {
       setSavingDate(date)
@@ -87,8 +94,21 @@ function Home() {
     },
   })
 
+  const markWorkoutDoneMutation = useMutation({
+    mutationFn: async () => markWorkoutDoneForToday(),
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: logsQueryKeys.all })
+      await queryClient.invalidateQueries({ queryKey: logsQueryKeys.todayPlan() })
+    },
+  })
+
   const weeklyLogs = weeklyLogsQuery.data ?? []
   const allLogs = allLogsQuery.data ?? []
+  const todayPlan = todayPlanQuery.data
+  const todayDate = toDateKey(new Date())
+  const isTodayWorkoutDone = allLogs.some(
+    (log) => log.date === todayDate && log.workoutCompleted,
+  )
 
   const weeklySummary = useMemo(
     () => calculateWeeklySummary(weeklyLogs),
@@ -153,6 +173,30 @@ function Home() {
             : 'Failed to save log.'}
         </p>
       ) : null}
+
+      {todayPlanQuery.isError ? (
+        <p className="rounded-lg border border-destructive/40 bg-destructive/10 p-3 text-sm text-destructive">
+          {todayPlanQuery.error instanceof Error
+            ? todayPlanQuery.error.message
+            : "Failed to load today's plan."}
+        </p>
+      ) : null}
+
+      {markWorkoutDoneMutation.isError ? (
+        <p className="rounded-lg border border-destructive/40 bg-destructive/10 p-3 text-sm text-destructive">
+          {markWorkoutDoneMutation.error instanceof Error
+            ? markWorkoutDoneMutation.error.message
+            : 'Failed to mark workout done.'}
+        </p>
+      ) : null}
+
+      <TodayPlanSection
+        plan={todayPlan}
+        isLoading={todayPlanQuery.isLoading}
+        isWorkoutCompleted={isTodayWorkoutDone}
+        isMarkingWorkout={markWorkoutDoneMutation.isPending}
+        onMarkWorkoutDone={() => void markWorkoutDoneMutation.mutateAsync()}
+      />
 
       <DailyCheckIn
         weekStart={weekStart}
