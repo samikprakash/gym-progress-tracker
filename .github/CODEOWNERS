@@ -1,0 +1,14 @@
+# CODEOWNERS
+#
+# Each line is a file pattern followed by one or more owners.
+# Order matters: the last matching rule takes precedence.
+#
+# @samikprakash is the default owner for every file in the repository.
+# All pull requests that modify any file require approval from @samikprakash
+# (or another explicitly listed approver) before they can be merged.
+#
+# To add extra approvers for specific paths, append additional GitHub
+# usernames or team slugs after the owner, e.g.:
+#   src/  @samikprakash @other-approver
+
+* @samikprakash
