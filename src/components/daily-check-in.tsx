@@ -156,7 +156,7 @@ export function DailyCheckIn({
 
     const timeoutId = window.setTimeout(() => {
       void handleSubmit(onSubmit)()
-    }, 650)
+    }, 2500)
 
     return () => window.clearTimeout(timeoutId)
   }, [watchedValues, isDirty, isValid, handleSubmit, onSubmit])
