@@ -19,6 +19,11 @@ type SeedResult = {
   dietPlanId: number
 }
 
+type PlanTemplateSeedResult = {
+  workoutPlanId: number
+  dietPlanId: number
+}
+
 const nowIsoString = () => new Date().toISOString()
 
 const getTodayDate = () => format(new Date(), 'yyyy-MM-dd')
@@ -255,6 +260,16 @@ const ensureDietPlan = async () => {
   return plan.id
 }
 
+export const seedDefaultPlanTemplates = async (): Promise<PlanTemplateSeedResult> => {
+  const workoutPlanId = await ensureWorkoutPlan()
+  const dietPlanId = await ensureDietPlan()
+
+  return {
+    workoutPlanId,
+    dietPlanId,
+  }
+}
+
 export const seedDefaultPlansForToday = async ({
   userId,
   force = false,
@@ -271,8 +286,7 @@ export const seedDefaultPlansForToday = async ({
     }
   }
 
-  const workoutPlanId = await ensureWorkoutPlan()
-  const dietPlanId = await ensureDietPlan()
+  const { workoutPlanId, dietPlanId } = await seedDefaultPlanTemplates()
 
   const todayDate = getTodayDate()
   const updatedAt = nowIsoString()

@@ -98,11 +98,10 @@ npm run build
 
 ## Example Seed Data
 
-The seed script inserts and assigns:
+The seed script inserts or updates only:
 
 - Workout plan: `Fat Loss PPL + Conditioning`
 - Diet plan: `2000 Cal High Protein`
-- Today's `daily_logs` entry with `workoutPlanId` + `dietPlanId`
 
 Run with:
 
