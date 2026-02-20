@@ -12,7 +12,7 @@ import {
   workoutExercises,
   workoutPlans,
 } from '@/lib/db/schema'
-import { seedDefaultPlansForToday } from '@/server/plan-seed'
+import { seedDefaultPlanTemplates, seedDefaultPlansForToday } from '@/server/plan-seed'
 import { requireAuthenticatedUserForCurrentRequest } from '@/server/auth-core'
 import { writeAccessMiddleware } from '@/server/security'
 
@@ -47,6 +47,31 @@ export const getTodayPlan = createServerFn({ method: 'GET' }).handler(async () =
         .limit(1)
       const defaultWorkoutPlan = defaultWorkoutPlanRows.at(0) ?? null
       workoutPlanId = defaultWorkoutPlan ? defaultWorkoutPlan.id : null
+    }
+
+    let dietPlanId: number | null =
+      todayLog && todayLog.dietPlanId !== null ? todayLog.dietPlanId : null
+
+    if (dietPlanId === null) {
+      const defaultDietPlanRows = await db
+        .select({
+          id: dietPlans.id,
+        })
+        .from(dietPlans)
+        .where(eq(dietPlans.name, DEFAULT_DIET_PLAN.name))
+        .limit(1)
+      const defaultDietPlan = defaultDietPlanRows.at(0) ?? null
+      dietPlanId = defaultDietPlan ? defaultDietPlan.id : null
+    }
+
+    if (workoutPlanId === null || dietPlanId === null) {
+      const seededTemplates = await seedDefaultPlanTemplates()
+      if (workoutPlanId === null) {
+        workoutPlanId = seededTemplates.workoutPlanId
+      }
+      if (dietPlanId === null) {
+        dietPlanId = seededTemplates.dietPlanId
+      }
     }
 
     let workout: {
@@ -90,21 +115,6 @@ export const getTodayPlan = createServerFn({ method: 'GET' }).handler(async () =
           exercises,
         }
       }
-    }
-
-    let dietPlanId: number | null =
-      todayLog && todayLog.dietPlanId !== null ? todayLog.dietPlanId : null
-
-    if (dietPlanId === null) {
-      const defaultDietPlanRows = await db
-        .select({
-          id: dietPlans.id,
-        })
-        .from(dietPlans)
-        .where(eq(dietPlans.name, DEFAULT_DIET_PLAN.name))
-        .limit(1)
-      const defaultDietPlan = defaultDietPlanRows.at(0) ?? null
-      dietPlanId = defaultDietPlan ? defaultDietPlan.id : null
     }
 
     let diet: {
