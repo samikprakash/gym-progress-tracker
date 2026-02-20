@@ -1,0 +1,20 @@
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: gym-progress-tracker
+    ports:
+      - '${APP_PORT:-3000}:3000'
+    env_file:
+      - .env
+    environment:
+      NODE_ENV: production
+      DATABASE_URL: ${DATABASE_URL:-/data/gym-tracker.db}
+    volumes:
+      - gym_tracker_data:/data
+    restart: unless-stopped
+
+volumes:
+  gym_tracker_data:
+    name: gym_tracker_data

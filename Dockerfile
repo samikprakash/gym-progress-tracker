@@ -31,6 +31,8 @@ COPY --from=build /app/.output ./.output
 
 RUN mkdir -p /data && chown -R node:node /app /data
 
+VOLUME ["/data"]
+
 USER node
 EXPOSE 3000
 

@@ -91,10 +91,40 @@ npm run build
 
 ## Database
 
-- SQLite file: `data/gym-tracker.db` (or `DATABASE_URL` if set)
+- SQLite file:
+  - local dev default: `data/gym-tracker.db`
+  - production default: `/data/gym-tracker.db`
+  - override with `DATABASE_URL`
 - Drizzle config: `drizzle.config.ts`
 - Schema: `src/lib/db/schema.ts`
 - Server functions: `src/server/logs.ts`, `src/server/plans.ts`
+
+### Docker Compose (persistent SQLite)
+
+This repo now includes `docker-compose.yml` with a named volume mounted to `/data`.
+
+1. Create/update `.env` (see `.env.example`).
+2. Start: `docker compose up -d --build`
+3. Verify named volume exists: `docker volume inspect gym_tracker_data`
+4. Deploy updates with the same command: `docker compose up -d --build`
+
+Important:
+- Do not run `docker compose down -v` unless you intentionally want to delete DB data.
+
+### Coolify deployment steps
+
+Recommended: deploy using `docker-compose.yml`.
+
+1. In Coolify, choose Docker Compose deployment for this repo.
+2. Use compose file path: `docker-compose.yml`.
+3. Ensure env includes `DATABASE_URL=/data/gym-tracker.db` (or leave default from compose).
+4. Deploy.
+
+If you continue using Dockerfile deployment instead of Compose:
+
+1. Add Persistent Storage in Coolify with container path `/data`.
+2. Set `DATABASE_URL=/data/gym-tracker.db`.
+3. Redeploy.
 
 ## Example Seed Data
 
